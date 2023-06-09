@@ -35,7 +35,6 @@
 #define GIFR_INT1         7
 #define GIFR_INT2         5
 
-
 #define SREG_IBIT         7
 
 //void __vector_1(void) __attribute__((signal));       //INT0
