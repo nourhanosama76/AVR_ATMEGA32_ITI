@@ -7,22 +7,36 @@
 #include "STD_TYPES.h"
 #include "BIT_MATHS.h"
 
+#include "DIO_interface.h"
 #include "EXTI_interface.h"
 #include "EXTI_private.h"
 #include "EXTI_cfg.h"
 
-
-/************************Global variables*************************/
-void(*EXTI_INT0CallBack)(void)=NULL;
-void(*EXTI_INT1CallBack)(void)=NULL;
-void(*EXTI_INT2CallBack)(void)=NULL;
-
+/************************Global variables************************************************/
+void(*EXTI_INT0CallBack)(void) = NULL ;
+void(*EXTI_INT1CallBack)(void) = NULL ;
+void(*EXTI_INT2CallBack)(void) = NULL ;
 
 /****************************************************************************************/
 /*****************************Functions' implementation**********************************/
 /****************************************************************************************/
+void CheckSwitchState(u8 Copy_INT0_SenseSignal)
+{
+	if(Copy_INT0_SenseSignal == FALLING_EDGE)
+	{
+	    /*falling edge sense signal*/
+		CLR_BIT(MCUCR, MCUCR_ISC00);
+		SET_BIT(MCUCR, MCUCR_ISC01);
+	}
 
-/*this function is to initialize INT0*/
+	/*poll over the flag until it's set*/
+	while(GET_BIT(GIFR , GIFR_INT0)==0);
+
+	/*clear PIF flag by setting it*/
+	SET_BIT(GIFR , GIFR_INT0);
+}
+
+
 void EXTI_voidINT0Init_RunTime(u8 Copy_INT0_SenseSignal)
 {
 	if(Copy_INT0_SenseSignal == LOW_LEVEL)
@@ -51,63 +65,57 @@ void EXTI_voidINT0Init_RunTime(u8 Copy_INT0_SenseSignal)
 
 	/*enable INT0 pin in GICR*/
 	SET_BIT(GICR , GICR_INT0);
-
 }
 
 /**************************************************************************************/
 /*this function is to initialize INT1*/
-void EXTI_voidINT1Init_RunTime(u8 Copy_INT0_SenseSignal)
+void EXTI_voidINT1Init_RunTime(u8 Copy_INT1_SenseSignal)
 {
-	if(Copy_INT0_SenseSignal == LOW_LEVEL)
+	if(Copy_INT1_SenseSignal == LOW_LEVEL)
 	{
 		CLR_BIT(MCUCR , MCUCR_ISC10);
 		CLR_BIT(MCUCR , MCUCR_ISC11);
 	}
 
-	else if (Copy_INT0_SenseSignal == ON_CHANGE)
+	else if (Copy_INT1_SenseSignal == ON_CHANGE)
 	{
 		SET_BIT(MCUCR, MCUCR_ISC10);
 		CLR_BIT(MCUCR, MCUCR_ISC11);
 	}
 
-	else if (Copy_INT0_SenseSignal == FALLING_EDGE)
+	else if (Copy_INT1_SenseSignal == FALLING_EDGE)
 	{
 		CLR_BIT(MCUCR, MCUCR_ISC10);
 		SET_BIT(MCUCR, MCUCR_ISC11);
 	}
 
-	else if (Copy_INT0_SenseSignal == RISING_EDGE)
+	else if (Copy_INT1_SenseSignal == RISING_EDGE)
 	{
 		SET_BIT(MCUCR, MCUCR_ISC10);
 		SET_BIT(MCUCR, MCUCR_ISC11);
 	}
 
-	/*enable INT0 pin in GICR*/
+	/*enable INT1 pin in GICR*/
 	SET_BIT(GICR , GICR_INT1);
-	SET_BIT(SREG , SREG_IBIT);
-
 }
 
 /**************************************************************************************/
 /*this function is to initialize INT2*/
-void EXTI_voidINT2Init_RunTime(u8 Copy_INT0_SenseSignal)
+void EXTI_voidINT2Init_RunTime(u8 Copy_INT2_SenseSignal)
 {
-    if (Copy_INT0_SenseSignal == FALLING_EDGE)
+    if (Copy_INT2_SenseSignal == FALLING_EDGE)
 	{
 		CLR_BIT(MCUCSR, MCUCSR_ISC2);
 	}
 
-	else if (Copy_INT0_SenseSignal == RISING_EDGE)
+	else if (Copy_INT2_SenseSignal == RISING_EDGE)
 	{
 		SET_BIT(MCUCSR, MCUCSR_ISC2);
 	}
 
-	/*enable INT0 pin in GICR*/
+	/*enable INT2 pin in GICR*/
 	SET_BIT(GICR , GICR_INT2);
-
 }
-
-
 
 /**************************************************************************************/
 void EXTI_voidINT0Init_PreBuild(void)
@@ -130,10 +138,7 @@ void EXTI_voidINT0Init_PreBuild(void)
 #endif
 
 	SET_BIT(GICR , GICR_INT0);
-
 }
-
-
 
 /**************************************************************************************/
 void EXTI_voidINT1Init_PreBuild(void)
@@ -156,10 +161,7 @@ void EXTI_voidINT1Init_PreBuild(void)
 #endif
 
 	SET_BIT(GICR , GICR_INT1);
-
 }
-
-
 
 /**************************************************************************************/
 void EXTI_voidINT2Init_PreBuild(void)
@@ -172,10 +174,7 @@ void EXTI_voidINT2Init_PreBuild(void)
 #endif
 
 	SET_BIT(GICR , GICR_INT2);
-
 }
-
-
 
 /**************************************************************************************/
 void EXTI_voidSetCallBackINT0(void(*Copy_ptrToFunc)(void))
@@ -203,7 +202,6 @@ void EXTI_voidSetCallBackINT1(void(*Copy_ptrToFunc)(void))
 	}
 }
 
-
 /**************************************************************************************/
 void EXTI_voidSetCallBackINT2(void(*Copy_ptrToFunc)(void))
 {
@@ -230,12 +228,9 @@ void EXTI_voidDisableEXTI(u8 INT_ID)
 		CLR_BIT(GICR , GICR_INT2);
 }
 
-
-
-///****************************************************************************************/
-///*******************************ISRs' Implementation*************************************/
-///****************************************************************************************/
-
+/****************************************************************************************/
+/*******************************ISRs' Implementation*************************************/
+/****************************************************************************************/
 
 /*ISR for INT0*/
 void __vector_1(void) __attribute__((signal));
@@ -251,7 +246,7 @@ void __vector_1(void)
 	}
 }
 
-
+/**************************************************************************************/
 /*ISR for INT1*/
 void __vector_2(void) __attribute__((signal));
 void __vector_2(void)
@@ -265,6 +260,8 @@ void __vector_2(void)
 		/*do nothing*/
 	}
 }
+
+/**************************************************************************************/
 /*ISR for INT2*/
 void __vector_3(void) __attribute__((signal));
 void __vector_3(void)
