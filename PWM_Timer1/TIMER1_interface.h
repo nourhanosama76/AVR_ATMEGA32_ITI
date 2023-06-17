@@ -43,7 +43,7 @@ void TMR1_voidTMR1SetCompareMatchValue(u16 Copy_u16OCR1Value);
 /*this function shall run timer1 on PWM mode*/
 void PWM_voidRunPWM(u8 Copy_u8Channel , u16 Copy_u16Frequency);
 
-/*this function shall set the duty cycle of the signal*/
+/*this function shall set the duty cycle of the signal according to the TOP value in ICR*/
 void PWM_voidSetDutyCycle(f32 Copy_u8DutyCycle);
 
 #endif /* TIMER1_INTERFACE_H_ */
